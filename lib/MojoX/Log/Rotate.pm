@@ -182,6 +182,10 @@ The constructor inherits from L<Mojo::Log> constructor and accepts the following
 The default behaviour is to rotate the log file based on the node creation time attribute (stat() 10th returned value)
 of the filename returned by L</"path">. It append the suffix pattern _YYYYMMDD_hhmmss just before the extension.
 
+=head1 LIMITATION
+
+Does not works with call to L</"append"> method or any direct access to the underlying file handle.
+
 =head1 SEE ALSO
  
 L<Mojo::Log>, L<Mojolicious>, L<Mojolicious::Guides>, L<https://mojolicious.org>.

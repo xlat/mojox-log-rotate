@@ -10,11 +10,10 @@ sub suffix {
     sprintf("_%04d%02d%02d_%02d%02d%02d", $y+1900, $m+1, $d, $h, $mi, $s);
 }
 
-sub stime { "". localtime }
-
 unlink 'test.log' if -f 'test.log';
 my $start = time;
 my $logger = MojoX::Log::Rotate->new(frequency => 2, path => 'test.log');
+$logger->short(1);
 
 is ref $logger, 'MojoX::Log::Rotate', 'constructor';
 ok $logger->isa('Mojo::Log'), 'inheritance';
@@ -26,17 +25,13 @@ $logger->on(rotate => sub {
     push @rotations, [time(), $r];
 });
 
-my $t1 = stime;
 $logger->info('first message');
 ok -f $logger->path, 'log file exist';
 sleep(1);
-my $t2 = stime;
 $logger->info('second message');
 sleep(2);
-my $t3 = stime;
 $logger->info('third message');
 sleep(3);
-my $t4 = stime;
 $logger->info('fourth message');
 
 $logger->handle->close; #let's unlink file
@@ -55,20 +50,20 @@ eq_or_diff \@rotations, \@expected, 'rotations';
 
 eq_or_diff [slurp($rotations[0][1]{how}{rotated_file})],
            [ 
-            "[$t1] [info] first message\n", 
-            "[$t2] [info] second message\n", 
+            $logger->_short(info => 'first message'), 
+            $logger->_short(info => 'second message'), 
            ],
            'first rotated log content';
 
 eq_or_diff [slurp($rotations[1][1]{how}{rotated_file})],
            [ 
-            "[$t3] [info] third message\n", 
+            $logger->_short(info => 'third message'),
            ],
            'second rotated log content';
 
 eq_or_diff [slurp('test.log')],
            [ 
-            "[$t4] [info] fourth message\n", 
+            $logger->_short(info => 'fourth message'),
            ],
            'remaining log content';
 

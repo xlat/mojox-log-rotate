@@ -11,7 +11,7 @@ use File::Slurp qw(slurp);
 use MojoX::Log::Rotate;
 
 $|++;
-$ENV{MOJO_LOG_LEVEL} = 'info';
+my $LEVEL = $ENV{MOJO_LOG_LEVEL} = 'info';
 
 sub suffix {
     my ($y, $m, $d, $h, $mi, $s) =  (localtime shift)[5, 4, 3, 2, 1, 0];
@@ -94,11 +94,11 @@ eq_or_diff \@rotations, \@expected, 'rotations';
 
 #another test is to read the content of all files + test.log, sort the lines and assert the content
 # make sure it is dispatched
-my @got_lines = sort map { slurp $_ } @expected, 'test.log';
+my @got_lines = sort grep { /test called for/ } map { slurp $_ } @expected, 'test.log';
 my @expected_lines;
 for my $tid (2..6){
     for (1..10){
-        push @expected_lines, $logger->_short('info', "test called for $_ by $tid");
+        push @expected_lines, $logger->_short($LEVEL, "test called for $_ by $tid");
     }
 }
 @expected_lines = sort @expected_lines;
@@ -119,7 +119,7 @@ sub startup {
   $self->log->level('error')->path(undef);
   my $r = $self->routes;
   $r->any('/test/:id/:tid' => sub($c) {
-    $c->app->log->info('test called for ' . $c->stash('id') . ' by ' . $c->stash('tid'));
+    $c->app->log->$LEVEL('test called for ' . $c->stash('id') . ' by ' . $c->stash('tid'));
     $c->render(text => 'test', status => 200);
   });
 }

@@ -1,4 +1,18 @@
 use Modern::Perl;
+BEGIN {
+    use Config;
+    if (! $Config{'useithreads'}) {
+        print("1..0 # SKIP Perl not compiled with 'useithreads'\n");
+        exit(0);
+    }
+    my $may_crash = scalar grep {/^DEBUGGING|PERL_TRACK_MEMPOOL$/} Config::bincompat_options();
+    if($may_crash) {
+        #looks like to be the cause of a "panic: free from wrong pool, 55967dc51d80!=559679d30010 during global destruction." message
+        print("1..0 # SKIP Perl compiled with DEBUGGING or PERL_TRACK_MEMPOOL\n");
+        exit(0);
+    }
+}
+
 use threads;
 use threads::shared;
 use Thread::Queue;
